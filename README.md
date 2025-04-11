@@ -3,7 +3,7 @@ AWS Infrastructure as Code with CloudFormation and Terraform
 
 # AWS IaC CI/CD Project
 
-このリポジトリは、AWS CloudFormationとTerraformを使用したInfrastructure as Code (IaC)および、GitHub Actionsを使用したCI/CDパイプラインの実装例です。
+AWS CloudFormationとTerraformを使用したInfrastructure as Code (IaC)および、GitHub Actionsを使用したCI/CDパイプラインの実装例。
 
 ## プロジェクト構成
 

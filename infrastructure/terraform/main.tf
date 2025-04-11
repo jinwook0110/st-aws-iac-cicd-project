@@ -3,12 +3,12 @@ provider "aws" {
 }
 
 # S3バケット
-resource "aws_s3_bucket" "suicatest-demo_bucket" {
-  bucket = "suicatest-demo-bucket-${data.aws_caller_identity.current.account_id}"
+resource "aws_s3_bucket" "demo_bucket" {
+  bucket = "demo-bucket-${data.aws_caller_identity.current.account_id}"
 }
 
 resource "aws_s3_bucket_versioning" "versioning" {
-  bucket = aws_s3_bucket.suicatest-demo_bucket.id
+  bucket = aws_s3_bucket.demo_bucket.id
   versioning_configuration {
     status = "Enabled"
   }
@@ -54,7 +54,7 @@ resource "aws_lambda_function" "text_to_s3" {
   
   environment {
     variables = {
-      BUCKET_NAME = aws_s3_bucket.suicatest-demo_bucket.id
+      BUCKET_NAME = aws_s3_bucket.demo_bucket.id
     }
   }
 }
@@ -105,13 +105,13 @@ resource "aws_iam_role_policy_attachment" "stepfunctions_lambda" {
 }
 
 # Step Functions
-resource "aws_sfn_state_machine" "suicatest-demo_workflow" {
-  name     = "suicatest-DemoWorkflow"
+resource "aws_sfn_state_machine" "demo_workflow" {
+  name     = "DemoWorkflow"
   role_arn = aws_iam_role.stepfunctions_execution_role.arn
   
   definition = <<EOF
 {
-  "Comment": "suicatest-Demo workflow with S3 and multiple Lambda functions",
+  "Comment": "Demo workflow with S3 and multiple Lambda functions",
   "StartAt": "StoreTextToS3",
   "States": {
     "StoreTextToS3": {
@@ -158,9 +158,9 @@ variable "code_bucket" {
 }
 
 output "s3_bucket_name" {
-  value = aws_s3_bucket.suicatest-demo_bucket.id
+  value = aws_s3_bucket.demo_bucket.id
 }
 
 output "state_machine_arn" {
-  value = aws_sfn_state_machine.suicatest-demo_workflow.arn
+  value = aws_sfn_state_machine.demo_workflow.arn
 }

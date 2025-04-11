@@ -1,6 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: 'IaC demo with S3 and Step Functions'
 
+Parameters:
+  CodeBucket:
+    Type: String
+    Description: S3 bucket containing Lambda function code
+
 Resources:
   # S3バケット
   DemoBucket:
@@ -125,11 +130,6 @@ Resources:
             }
           }
         }
-
-Parameters:
-  CodeBucket:
-    Type: String
-    Description: S3 bucket containing Lambda function code
 
 Outputs:
   S3BucketName:

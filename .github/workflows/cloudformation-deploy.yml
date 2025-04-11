@@ -1,32 +1,52 @@
-name: Deploy Infrastructure
+name: CloudFormation Deploy
 
 on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - delete
   push:
     branches: [ main ]
     paths:
-      - 'infrastructure/**'
+      - 'infrastructure/cloudformation/**'
       - 'lambda_functions/**'
-      - '.github/workflows/deploy.yml'
+      - '.github/workflows/cloudformation-deploy.yml'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
       
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.12'
       
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-1
       
+      - name: Delete CloudFormation Stack
+        if: github.event.inputs.action == 'delete'
+        run: |
+          aws cloudformation delete-stack --stack-name demo-stack
+          echo "Deleting stack demo-stack. This may take a few minutes..."
+          aws cloudformation wait stack-delete-complete --stack-name demo-stack
+          echo "Stack deleted successfully!"
+        
       - name: Package and upload Lambda functions
+        if: github.event.inputs.action != 'delete'
         run: |
           cd lambda_functions/text_to_s3/
           zip -r ../text_to_s3.zip *
@@ -38,11 +58,15 @@ jobs:
           
           CODE_BUCKET=code-bucket-$(aws sts get-caller-identity --query Account --output text)
           
+          # バケットが存在しない場合は作成
+          aws s3api head-bucket --bucket ${CODE_BUCKET} 2>/dev/null || aws s3 mb s3://${CODE_BUCKET}
+          
           aws s3 cp lambda_functions/text_to_s3.zip s3://${CODE_BUCKET}/lambda_functions/
           aws s3 cp lambda_functions/numbers_1_to_1000.zip s3://${CODE_BUCKET}/lambda_functions/
           aws s3 cp lambda_functions/numbers_1001_to_2000.zip s3://${CODE_BUCKET}/lambda_functions/
       
-      - name: Deploy CloudFormation
+      - name: Deploy CloudFormation Stack
+        if: github.event.inputs.action != 'delete'
         run: |
           CODE_BUCKET=code-bucket-$(aws sts get-caller-identity --query Account --output text)
           
@@ -50,4 +74,9 @@ jobs:
             --template-file infrastructure/cloudformation/template.yaml \
             --stack-name demo-stack \
             --parameter-overrides CodeBucket=${CODE_BUCKET} \
-            --capabilities CAPABILITY_IAM
+            --capabilities CAPABILITY_IAM \
+            --no-fail-on-empty-changeset
+          
+          # 出力を表示
+          echo "Stack outputs:"
+          aws cloudformation describe-stacks --stack-name demo-stack --query "Stacks[0].Outputs" --output table

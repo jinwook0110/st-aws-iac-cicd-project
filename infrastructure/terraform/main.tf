@@ -4,7 +4,7 @@ provider "aws" {
 
 # S3バケット
 resource "aws_s3_bucket" "demo_bucket" {
-  bucket = "demo-bucket-${data.aws_caller_identity.current.account_id}"
+  bucket = "tf-demo-bucket-${data.aws_caller_identity.current.account_id}"
 }
 
 resource "aws_s3_bucket_versioning" "versioning" {
@@ -16,7 +16,7 @@ resource "aws_s3_bucket_versioning" "versioning" {
 
 # Lambda実行用IAMロール
 resource "aws_iam_role" "lambda_execution_role" {
-  name = "lambda_execution_role"
+  name = "tf_lambda_execution_role"
   
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -44,7 +44,7 @@ resource "aws_iam_role_policy_attachment" "lambda_s3" {
 
 # S3にファイルを保存するLambda
 resource "aws_lambda_function" "text_to_s3" {
-  function_name = "TextToS3Function"
+  function_name = "TF_TextToS3Function"
   s3_bucket     = var.code_bucket
   s3_key        = "lambda_functions/text_to_s3.zip"
   handler       = "lambda_function.lambda_handler"
@@ -61,7 +61,7 @@ resource "aws_lambda_function" "text_to_s3" {
 
 # 1〜1000の数字を生成するLambda
 resource "aws_lambda_function" "numbers_1_to_1000" {
-  function_name = "Numbers1To1000Function"
+  function_name = "TF_Numbers1To1000Function"
   s3_bucket     = var.code_bucket
   s3_key        = "lambda_functions/numbers_1_to_1000.zip"
   handler       = "lambda_function.lambda_handler"
@@ -72,7 +72,7 @@ resource "aws_lambda_function" "numbers_1_to_1000" {
 
 # 1001〜2000の数字を生成するLambda
 resource "aws_lambda_function" "numbers_1001_to_2000" {
-  function_name = "Numbers1001To2000Function"
+  function_name = "TF_Numbers1001To2000Function"
   s3_bucket     = var.code_bucket
   s3_key        = "lambda_functions/numbers_1001_to_2000.zip"
   handler       = "lambda_function.lambda_handler"
@@ -83,7 +83,7 @@ resource "aws_lambda_function" "numbers_1001_to_2000" {
 
 # Step Functions実行用IAMロール
 resource "aws_iam_role" "stepfunctions_execution_role" {
-  name = "stepfunctions_execution_role"
+  name = "tf_stepfunctions_execution_role"
   
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -106,7 +106,7 @@ resource "aws_iam_role_policy_attachment" "stepfunctions_lambda" {
 
 # Step Functions
 resource "aws_sfn_state_machine" "demo_workflow" {
-  name     = "DemoWorkflow"
+  name     = "TF_DemoWorkflow"
   role_arn = aws_iam_role.stepfunctions_execution_role.arn
   
   definition = <<EOF

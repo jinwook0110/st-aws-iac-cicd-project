@@ -1,0 +1,53 @@
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'infrastructure/**'
+      - 'lambda_functions/**'
+      - '.github/workflows/deploy.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12'
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-1
+      
+      - name: Package and upload Lambda functions
+        run: |
+          cd lambda_functions/text_to_s3/
+          zip -r ../text_to_s3.zip *
+          cd ../numbers_1_to_1000/
+          zip -r ../numbers_1_to_1000.zip *
+          cd ../numbers_1001_to_2000/
+          zip -r ../numbers_1001_to_2000.zip *
+          cd ../../
+          
+          CODE_BUCKET=code-bucket-$(aws sts get-caller-identity --query Account --output text)
+          
+          aws s3 cp lambda_functions/text_to_s3.zip s3://${CODE_BUCKET}/lambda_functions/
+          aws s3 cp lambda_functions/numbers_1_to_1000.zip s3://${CODE_BUCKET}/lambda_functions/
+          aws s3 cp lambda_functions/numbers_1001_to_2000.zip s3://${CODE_BUCKET}/lambda_functions/
+      
+      - name: Deploy CloudFormation
+        run: |
+          CODE_BUCKET=code-bucket-$(aws sts get-caller-identity --query Account --output text)
+          
+          aws cloudformation deploy \
+            --template-file infrastructure/cloudformation/template.yaml \
+            --stack-name demo-stack \
+            --parameter-overrides CodeBucket=${CODE_BUCKET} \
+            --capabilities CAPABILITY_IAM

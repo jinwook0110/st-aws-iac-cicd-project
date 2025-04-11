@@ -1,7 +1,7 @@
 # st-aws-iac-cicd-project
 AWS Infrastructure as Code with CloudFormation and Terraform
 
-# AWS IaC CI/CD Project
+# 2025-04-11 suicatest AWS IaC CI/CD Project
 
 AWS CloudFormationとTerraformを使用したInfrastructure as Code (IaC)および、GitHub Actionsを使用したCI/CDパイプラインの実装例。
 

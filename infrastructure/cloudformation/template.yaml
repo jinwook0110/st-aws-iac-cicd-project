@@ -1,12 +1,12 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'IaC demo with S3 and Step Functions'
+Description: 'suicatest IaC demo with S3 and Step Functions'
 
 Resources:
   # S3バケット
   DemoBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "demo-bucket-${AWS::AccountId}"
+      BucketName: !Sub "suicatest-demo-bucket-${AWS::AccountId}"
       VersioningConfiguration:
         Status: Enabled
 
@@ -89,7 +89,7 @@ Resources:
       RoleArn: !GetAtt StepFunctionExecutionRole.Arn
       DefinitionString: !Sub |
         {
-          "Comment": "Demo workflow with S3 and multiple Lambda functions",
+          "Comment": "suicatest-Demo workflow with S3 and multiple Lambda functions",
           "StartAt": "StoreTextToS3",
           "States": {
             "StoreTextToS3": {
